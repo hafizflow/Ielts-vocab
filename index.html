@@ -4512,14 +4512,32 @@
                 h += '<div class="count"><span><b>' + list.length + '</b> word' + (list.length === 1 ? '' : 's') + (S.q.trim() ? ' matching “' + esc(S.q.trim()) + '”' : '') + '</span>' +
                     '<span class="legend"><span class="k">' + ic('circle-check') + 'Known</span><span class="l">' + ic('clock') + 'Learning</span><span class="hint-txt"><span class="t-touch">Tap</span><span class="t-mouse">Click</span> a word to study it</span></span></div>';
                 if (!list.length) { h += empty('No words match. Try a different search, or reset the sublist and status filters.', true); }
-                else h += '<div class="grid' + (S.anim ? ' anim' : '') + '">' + list.map(function (w, n) {
-                    var s = stOf(w);
+                else h += '<div class="grid' + (S.anim ? ' anim' : '') + '" id="grid">' + tiles(list, 0) + '</div>' + (list.length > CHUNK ? '<div id="more" aria-hidden="true"></div>' : '');
+                if (moreIO) moreIO.disconnect();
+                document.getElementById('main').innerHTML = h;
+                S.anim = false;
+                var more = document.getElementById('more');
+                if (more && 'IntersectionObserver' in window) {
+                    var shown = CHUNK;
+                    moreIO = new IntersectionObserver(function (e) {
+                        if (!e[0].isIntersecting) return;
+                        document.getElementById('grid').insertAdjacentHTML('beforeend', tiles(list, shown));
+                        shown += CHUNK;
+                        if (shown >= list.length) { moreIO.disconnect(); more.remove(); } else { moreIO.unobserve(more); moreIO.observe(more); }
+                    }, { rootMargin: '800px' });
+                    moreIO.observe(more);
+                } else if (more) {
+                    document.getElementById('grid').insertAdjacentHTML('beforeend', tiles(list, CHUNK, true)); more.remove();
+                }
+            }
+            var CHUNK = 60, moreIO;
+            function tiles(list, from, all) {
+                return list.slice(from, all ? list.length : from + CHUNK).map(function (w, k) {
+                    var s = stOf(w), n = from + k;
                     return '<button class="tile" data-act="open" data-i="' + w.i + '" data-nav="list" data-s="' + s + '"' + (S.anim && n < 30 ? ' style="--d:' + n + '"' : '') + '>' +
                         (s === 'n' ? '' : '<span class="tst">' + ic(STICON[s]) + '<span class="sr">' + STNAME[s] + '</span></span>') +
                         '<span class="tw">' + esc(w.w) + '</span><span class="tp">' + esc(posLabel(w.p)) + '</span><span class="tb">' + esc(w.bn.split(';')[0]) + '</span></button>';
-                }).join('') + '</div>';
-                document.getElementById('main').innerHTML = h;
-                S.anim = false;
+                }).join('');
             }
 
             /* ---------- detail ---------- */
