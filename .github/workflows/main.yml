@@ -1,0 +1,13 @@
+name: Corn jobs
+
+on: 
+  schedule: 
+  - cron: "0 0 * * *"
+
+jobs:
+  run-script: 
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Print name
+        run: echo"Hello from corn jobs"
